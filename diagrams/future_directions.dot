@@ -1,0 +1,33 @@
+digraph future {
+  graph [bgcolor="black" rankdir=LR fontname="Courier New"
+         label="sessionarchive — Future Directions Roadmap"
+         labelloc=t fontcolor="#00FF41" fontsize=17 pad=0.5 ranksep=0.9 nodesep=0.3];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [style=invis];
+
+  subgraph cluster_done {
+    label="✓ Shipped"; fontcolor="#00FF41"; color="#00FF41"; style=dashed;
+    d1 [label="ingest / query / label\nas one CLI, one image" color="#00FF41" fontcolor="#00FF41"];
+    d2 [label="--like, --rerank\n(persistent MLP probe)" color="#00FF41" fontcolor="#00FF41"];
+    d3 [label="bundled Neo4j,\nfully standalone" color="#00FF41" fontcolor="#00FF41"];
+    d4 [label="host networking\nworkaround for\nloopback-only Ollama" color="#00FF41" fontcolor="#00FF41"];
+    d5 [label="own public repo,\nindependent of\npaper_processor" color="#00FF41" fontcolor="#00FF41"];
+  }
+
+  subgraph cluster_soon {
+    label="Proposed — next"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    n1 [label="Rocchio-style ephemeral\nfeedback as a --rerank\nalternative (no training loop)" color="#FFFF00" fontcolor="#FFFF00"];
+    n2 [label="bridge-network compose\nvariant for Mac/Windows\n(host networking is Linux-only)" color="#FFFF00" fontcolor="#FFFF00"];
+    n3 [label="publish prebuilt image\nto a registry instead of\nbuild-on-first-run" color="#FFFF00" fontcolor="#FFFF00"];
+  }
+
+  subgraph cluster_later {
+    label="Proposed — later / at scale"; fontcolor="#FF6600"; color="#FF6600"; style=dashed;
+    l1 [label="FAISS IVF/HNSW\nif corpus grows past\n~10K chunks" color="#FF6600" fontcolor="#FF6600"];
+    l2 [label="image-modality support\n(militia-classifier's CLIP\npattern, not ported yet)" color="#FF6600" fontcolor="#FF6600"];
+    l3 [label="optional cross-repo\nConcept import/export vs.\npaper_processor's graph" color="#FF6600" fontcolor="#FF6600"];
+  }
+
+  d1 -> n1 [style=invis]; d2 -> n2 [style=invis]; d3 -> n3 [style=invis];
+  n1 -> l1 [style=invis]; n2 -> l2 [style=invis]; n3 -> l3 [style=invis];
+}

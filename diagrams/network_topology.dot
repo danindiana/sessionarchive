@@ -1,0 +1,33 @@
+digraph network_topology {
+  graph [bgcolor="black" rankdir=LR fontname="Courier New"
+         label="sessionarchive — network topology (host networking on Linux)"
+         labelloc=t fontcolor="#00FF41" fontsize=14 pad=0.5 nodesep=0.5];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  subgraph cluster_app {
+    label="app container — network_mode: host"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    app [label="sessionarchive\ningest | query | label\n(shares host's network\nnamespace directly)" color="#00FFFF" fontcolor="#00FFFF" shape=box];
+  }
+
+  subgraph cluster_local {
+    label="Reached via localhost (because of host networking)"; fontcolor="#7FFF00"; color="#7FFF00"; style=dashed;
+    ollama [label="Ollama\n127.0.0.1:11434\n(loopback-only, by design)" color="#7FFF00" fontcolor="#7FFF00" shape=doubleoctagon];
+    neo4j  [label="sessionarchive-neo4j\nlocalhost:7687\n(published from its own\ncontainer, bridge network)" color="#7FFF00" fontcolor="#7FFF00" shape=doubleoctagon];
+  }
+
+  subgraph cluster_outbound {
+    label="Outbound-only, first-run only"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    hfhub [label="huggingface.co\nbge-m3 model download\n(~2GB, cached after)" color="#FFFF00" fontcolor="#FFFF00" shape=hexagon];
+  }
+
+  subgraph cluster_wan {
+    label="WAN — not applicable"; fontcolor="#FF3333"; color="#FF3333"; style=dashed;
+    noexposure [label="Neo4j ports bound to\n127.0.0.1 only in compose;\nno UFW rule, no tunnel —\nzero WAN exposure" color="#FF3333" fontcolor="#FF3333" shape=plaintext];
+  }
+
+  app -> ollama [color="#7FFF00" label="http, via host loopback"];
+  app -> neo4j  [color="#7FFF00" label="bolt, via host loopback"];
+  app -> hfhub  [color="#FFFF00" label="https, outbound,\nonce per model"];
+  app -> noexposure [color="#FF3333" style=dashed];
+}

@@ -1,0 +1,29 @@
+digraph portability {
+  graph [bgcolor="black" rankdir=LR fontname="Courier New"
+         label="sessionarchive — portability (Docker-first, still some assumptions)"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.4];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [style=invis];
+
+  subgraph cluster_portable {
+    label="Portable out of the box"; fontcolor="#00FF41"; color="#00FF41"; style=dashed;
+    p1 [label="Neo4j — bundled in\ncompose, own volume,\nno external graph needed" color="#00FF41" fontcolor="#00FF41"];
+    p2 [label="Corpus + index —\nDocker bind mounts,\nno hardcoded host paths" color="#00FF41" fontcolor="#00FF41"];
+    p3 [label="Embedding + FAISS —\nCPU-capable, GPU\nauto-detected if present" color="#00FF41" fontcolor="#00FF41"];
+    p4 [label="Single image, single\nCLI — same on any\nDocker host" color="#00FF41" fontcolor="#00FF41"];
+  }
+
+  subgraph cluster_assume {
+    label="Assumes: Ollama on the host"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    a1 [label="Not containerized —\nshared multi-model\nresource, by design" color="#FFFF00" fontcolor="#FFFF00"];
+    a2 [label="OLLAMA_URL env var\nmakes the address\nconfigurable" color="#FFFF00" fontcolor="#FFFF00"];
+  }
+
+  subgraph cluster_linux {
+    label="Linux-specific default"; fontcolor="#FF6600"; color="#FF6600"; style=dashed;
+    l1 [label="app service uses\nnetwork_mode: host\n(needed to reach a\nloopback-bound Ollama)" color="#FF6600" fontcolor="#FF6600"];
+    l2 [label="Mac/Windows: switch to\nbridge + host.docker.internal,\npoint OLLAMA_URL there instead" color="#FF6600" fontcolor="#FF6600"];
+  }
+
+  p1 -> a1 [style=invis]; p2 -> a2 [style=invis]; p3 -> l1 [style=invis]; p4 -> l2 [style=invis];
+}

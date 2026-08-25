@@ -1,0 +1,41 @@
+digraph overview {
+  graph [bgcolor="black" rankdir=LR fontname="Courier New"
+         label="sessionarchive — 30,000ft overview (standalone, containerized)"
+         labelloc=t fontcolor="#00FF41" fontsize=16 pad=0.5 nodesep=0.5];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=11 penwidth=2.0];
+  edge  [fontname="Courier New" fontsize=10 penwidth=2.0];
+
+  subgraph cluster_corpus {
+    label="Your corpus"; fontcolor="#FF00FF"; color="#FF00FF"; style=dashed;
+    corpus [label="any folder of dated\nsession/README/SESSION.md\nfolders (bind-mounted)" color="#FF00FF" fontcolor="#FF00FF" shape=folder];
+  }
+
+  subgraph cluster_docker {
+    label="docker compose"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    app [label="app container\nsessionarchive ingest|query|label" color="#00FFFF" fontcolor="#00FFFF" shape=box3d];
+    neo4j [label="neo4j container\n(bundled, own volume)\nSession + Concept graph" color="#7FFF00" fontcolor="#7FFF00" shape=cylinder];
+  }
+
+  subgraph cluster_volume {
+    label="Docker volume"; fontcolor="#7FFF00"; color="#7FFF00"; style=dashed;
+    faiss [label="FAISS index\n./data/index/" color="#7FFF00" fontcolor="#7FFF00" shape=cylinder];
+  }
+
+  subgraph cluster_host {
+    label="Host (external)"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    ollama [label="Ollama\n(already running on\nthe host, any box)" color="#FFFF00" fontcolor="#FFFF00" shape=doubleoctagon];
+  }
+
+  subgraph cluster_user {
+    label="You"; fontcolor="#FF3333"; color="#FF3333"; style=dashed;
+    you [label="natural-language question\nor \"--like <past session>\"" color="#FF3333" fontcolor="#FF3333" shape=note];
+    answer [label="ranked past sessions\n+ related concepts" color="#FF3333" fontcolor="#FF3333" shape=note];
+  }
+
+  corpus -> app [color="#FF00FF" label="ingest"];
+  app -> neo4j [color="#00FFFF"];
+  app -> faiss [color="#00FFFF"];
+  app -> ollama [color="#FFFF00" label="host-gateway"];
+  you -> app [color="#FF3333"];
+  app -> answer [color="#FF3333"];
+}

@@ -1,0 +1,53 @@
+digraph catch22s {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="sessionarchive — catch-22s hit containerizing this"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.5 ranksep=0.4];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  subgraph cluster_cache {
+    label="Re-downloading a 2.3GB model on EVERY run"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    c1 [label="'docker compose run' spins up a\nFRESH ephemeral container each time —\nHF cache lived in the writable layer,\nnot a volume" color="#00FFFF" fontcolor="#00FFFF"];
+    c2 [label="bge-m3 (~2.3GB) silently\nre-downloaded on every single\ningest/query/label invocation,\nnot just the first" color="#00FFFF" fontcolor="#00FFFF"];
+    c3 [label="fix: mount ./data/hf-cache\nto /root/.cache/huggingface\nas a real volume in compose" color="#00FFFF" fontcolor="#00FFFF"];
+    c1 -> c2 -> c3 [color="#00FFFF"];
+  }
+
+  subgraph cluster_ollama {
+    label="The big one: loopback-only Ollama"; fontcolor="#FF3333"; color="#FF3333"; style=dashed;
+    o1 [label="Ollama is deliberately bound\nto 127.0.0.1:11434 only\n(security posture, not a bug)" color="#FF3333" fontcolor="#FF3333"];
+    o2 [label="bridge network +\nhost.docker.internal +\nhost-gateway CANNOT reach\na loopback-only service —\ndifferent source IP, connection\nrefused" color="#FF3333" fontcolor="#FF3333"];
+    o3 [label="fix: network_mode: host\non Linux — container shares\nthe host's network namespace,\nlocalhost really is localhost" color="#FF3333" fontcolor="#FF3333"];
+    o1 -> o2 -> o3 [color="#FF3333"];
+  }
+
+  subgraph cluster_ports {
+    label="Port collisions on a box that already runs Neo4j"; fontcolor="#FF6600"; color="#FF6600"; style=dashed;
+    n1 [label="paper-processor-neo4j\nalready owns 7474/7687\non this box" color="#FF6600" fontcolor="#FF6600"];
+    n2 [label="fix: NEO4J_HTTP_PORT /\nNEO4J_BOLT_PORT env vars,\ndefaulted sanely, overridable\nvia .env for local testing" color="#FF6600" fontcolor="#FF6600"];
+    n1 -> n2 [color="#FF6600"];
+  }
+
+  subgraph cluster_torch {
+    label="import torch segfaults (the real one)"; fontcolor="#FF00FF"; color="#FF00FF"; style=dashed;
+    tc1 [label="plain 'pip install torch' pulls\nthe CUDA-capable wheel — with\nno GPU passthrough configured,\nimport torch crashed with a C++\nstd::length_error: vector::reserve" color="#FF00FF" fontcolor="#FF00FF"];
+    tc2 [label="fix: ENV OMP_NUM_THREADS=1\nin the Dockerfile — sidesteps\nthe broken OpenMP thread-count\ninit path entirely" color="#FF00FF" fontcolor="#FF00FF"];
+    tc1 -> tc2 [color="#FF00FF"];
+  }
+
+  subgraph cluster_flaky {
+    label="pip hash mismatches — recurring, not a one-off"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    f1 [label="'PACKAGES DO NOT MATCH\nTHE HASHES' — hit 3 SEPARATE\ntimes on unmodified\nrequirements.txt, different\npackages each time" color="#FFFF00" fontcolor="#FFFF00"];
+    f2 [label="this build environment's path\nto PyPI corrupts mid-download\non long (400s+) multi-package\ninstalls — not a one-off fluke" color="#FFFF00" fontcolor="#FFFF00"];
+    f3 [label="fix: retry each pip install\nup to 3x in the Dockerfile\n(RUN cmd1 || cmd1 || cmd1)" color="#FFFF00" fontcolor="#FFFF00"];
+    f1 -> f2 -> f3 [color="#FFFF00"];
+  }
+
+  subgraph cluster_tty {
+    label="label needs a TTY — but only label"; fontcolor="#7FFF00"; color="#7FFF00"; style=dashed;
+    t1 [label="_getch() raw-mode termios\nwon't work through plain\ndocker run / compose run" color="#7FFF00" fontcolor="#7FFF00"];
+    t2 [label="setting stdin_open+tty:true\nas SERVICE DEFAULTS backfired —\ningest/query containers then\nhung indefinitely after finishing\n(pty stays open, container\nnever reports exited)" color="#7FFF00" fontcolor="#7FFF00"];
+    t3 [label="fix: no tty/stdin_open in\ncompose at all — pass -it\nexplicitly only for label:\ndocker compose run --rm -it\napp label" color="#7FFF00" fontcolor="#7FFF00"];
+    t1 -> t2 -> t3 [color="#7FFF00"];
+  }
+}

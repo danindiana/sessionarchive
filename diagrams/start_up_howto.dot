@@ -1,0 +1,31 @@
+digraph startup_howto {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="sessionarchive — cold-start HOWTO (Docker)"
+         labelloc=t fontcolor="#00FF41" fontsize=16 pad=0.5 ranksep=0.45 nodesep=0.4];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0 color="#FF00FF"];
+
+  start [label="START\nany box with Docker" shape=circle color="#00FF41" fontcolor="#00FF41"];
+
+  prereq [label="Install Docker + Compose\nInstall + run Ollama on the host\n(pull at least one model)" shape=box color="#00FFFF" fontcolor="#00FFFF"];
+  clone  [label="git clone .../sessionarchive\ncd sessionarchive" shape=box color="#00FFFF" fontcolor="#00FFFF"];
+  mount  [label="put your corpus at\n./data/corpus/ (bind mount)" shape=box color="#00FFFF" fontcolor="#00FFFF"];
+
+  up [label="docker compose up -d neo4j\n(bundled graph DB, own volume)" shape=box color="#7FFF00" fontcolor="#7FFF00"];
+
+  checkq [label="Ollama on 127.0.0.1\nonly (default)?" shape=diamond color="#FFFF00" fontcolor="#FFFF00"];
+  hostnet [label="Linux: network_mode: host\n(already default in compose)" shape=box color="#00FF41" fontcolor="#00FF41"];
+  bridge  [label="Mac/Windows: switch app service\nto bridge + host.docker.internal\n(see README)" shape=box color="#FF6600" fontcolor="#FF6600"];
+
+  firstrun [label="docker compose run --rm app\n  ingest --limit 5\n(bge-m3 first download: ~2GB, one-time,\ncached in the image layer/volume)" shape=box color="#00FF41" fontcolor="#00FF41"];
+  verify [label="docker compose run --rm app\n  query \"<a question about one of those 5>\"" shape=box color="#00FF41" fontcolor="#00FF41"];
+
+  fullrun [label="docker compose run --rm app ingest\n(full corpus, resumable)" shape=box color="#00FF41" fontcolor="#00FF41"];
+  done [label="READY\nquery / --like / --rerank / label" shape=circle color="#00FF41" fontcolor="#00FF41"];
+
+  start -> prereq -> clone -> mount -> up -> checkq;
+  checkq -> hostnet [label="yes (default)" color="#00FF41"];
+  checkq -> bridge [label="no / other OS" color="#FF6600"];
+  hostnet -> firstrun; bridge -> firstrun;
+  firstrun -> verify -> fullrun -> done;
+}

@@ -1,0 +1,48 @@
+services:
+  neo4j:
+    image: neo4j:latest
+    container_name: sessionarchive-neo4j
+    ports:
+      - "127.0.0.1:${NEO4J_HTTP_PORT:-7474}:7474"  # HTTP Browser Console
+      - "127.0.0.1:${NEO4J_BOLT_PORT:-7687}:7687"  # Bolt Protocol (queries)
+    volumes:
+      - ./data/neo4j:/data
+      - ./data/neo4j-logs:/logs
+    environment:
+      - NEO4J_AUTH=neo4j/password123
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: sessionarchive-app
+    depends_on:
+      - neo4j
+    # host networking, not bridge+host-gateway: Ollama on this host (and many
+    # setups) is deliberately bound to 127.0.0.1 only, which host-gateway
+    # cannot reach from a bridge network — see diagrams/catch22s.png.
+    # Linux-only; Mac/Windows users should switch back to bridge +
+    # extra_hosts/host.docker.internal and a non-loopback OLLAMA_URL.
+    network_mode: host
+    environment:
+      - NEO4J_URI=bolt://localhost:${NEO4J_BOLT_PORT:-7687}
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password123
+      - OLLAMA_URL=http://localhost:11434
+    volumes:
+      - ./data/corpus:/data/corpus:ro
+      - ./data/index:/data/index
+      # Without this, every `docker compose run` is a fresh ephemeral
+      # container and bge-m3 (~2.3GB) re-downloads from Hugging Face Hub on
+      # EVERY invocation, not just the first — see diagrams/catch22s.png.
+      - ./data/hf-cache:/root/.cache/huggingface
+    # No default command — this service is meant for one-off invocations:
+    #   docker compose run --rm app ingest --limit 5
+    #   docker compose run --rm app query "some question"
+    #   docker compose run --rm -it app label   # -it required: label needs a
+    #                                            # real TTY; stdin_open/tty
+    #                                            # are deliberately NOT set
+    #                                            # here — always-on pty
+    #                                            # allocation stops ingest/
+    #                                            # query containers exiting
+    #                                            # cleanly (see catch22s).
+    command: ["--help"]
