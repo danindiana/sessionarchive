@@ -2,10 +2,14 @@
 # (these are not pip-installable in a slim image — they require matched
 # CUDA + RAPIDS builds). Requires the NVIDIA Container Toolkit on the host
 # and a compose GPU reservation (see docker-compose.yml's `layout` service).
-FROM rapidsai/base:24.12-cuda12.5-py3.11
+FROM rapidsai/base:25.10-cuda12.9-py3.11
 
 WORKDIR /app
 USER root
+# Otherwise compute_layout.py's print() status lines never reach `docker
+# compose run`'s captured output before a crash — stdout is fully buffered
+# when not attached to a tty, so a segfault silently drops the whole buffer.
+ENV PYTHONUNBUFFERED=1
 
 COPY requirements-layout.txt .
 RUN pip install --no-cache-dir -r requirements-layout.txt
