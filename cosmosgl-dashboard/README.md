@@ -63,30 +63,9 @@ cd cosmosgl-dashboard
 docker compose up -d --build neo4j server
 ```
 
-Then open `http://localhost:28686` (or whatever `DASHBOARD_PORT` is set to in `.env`).
-The dashboard will show an empty graph until you load data into the bundled Neo4j — point
-any Cypher client at `bolt://localhost:27687` (`neo4j`/`password123`, both overridable via
-`.env`) and load nodes labeled `Paper`/`Concept`/`Theorem`/`Algorithm`/`CodeSnippet`/
-`Diagram`.
-
-### Running the GPU layout step
-
-```bash
-docker compose run --rm layout
-```
-
-Requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
-on the host, **with a CDI spec regenerated against the currently installed driver**
-(`sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml`) — a stale spec (e.g. left over from
-before a driver upgrade) will reference library paths that no longer exist and fail at container
-start. `docker-compose.yml`'s GPU reservation uses the CDI device syntax (`devices:
-["nvidia.com/gpu=0"]`), not the legacy `deploy.resources.reservations.devices: driver: nvidia`
-form, since that requires a registered `nvidia` Docker runtime this doesn't assume you have.
-
-Re-run this any time the graph topology changes and you want node positions recomputed — it's a
-one-shot job, not a daemon. Verify it worked by checking that nodes in the bundled Neo4j now have
-non-null `fx`/`fy` properties (e.g. via the Neo4j Browser at `http://localhost:27474`), and that
-the dashboard renders them at those positions instead of all stacked at the origin.
+Then open `http://localhost:28686` (or whatever `DASHBOARD_PORT` is set to in `.env`). The
+dashboard starts empty — see [`HOWTO.md`](HOWTO.md) for the full cold-start walkthrough, including
+loading the example dataset and running the GPU `layout` step.
 
 ## Testing
 
@@ -101,26 +80,12 @@ Neo4j, seeds a small known graph (`tests/fixtures/seed.cypher`), and verifies `/
 `/api/graph`, `/api/node/<id>` (both found and 404 cases), and `/pdf/<id>` (404-with-
 explanation when the stored path doesn't exist on disk) against the real running
 container — then tears the stack down. It does not require a GPU and excludes the
-`layout` service; verify that one manually as described above.
+`layout` service; see [`HOWTO.md`](HOWTO.md) to verify that one manually.
 
 ## Troubleshooting
 
-Two real problems were hit (and fixed) getting the GPU `layout` service running on real hardware
-— both firsthand, not speculative:
-
-- **`Error response from daemon: could not select device driver "nvidia" with capabilities:
-  [[gpu]]`** — your host has CDI-based GPU passthrough (the modern NVIDIA Container Toolkit
-  default) rather than the legacy `nvidia` Docker runtime. `docker-compose.yml` already uses the
-  CDI form (`devices: ["nvidia.com/gpu=0"]`); if you still hit this, check
-  `docker info | grep -i runtime` for a registered `nvidia` runtime vs. `docker info | grep cdi`
-  for CDI devices, and match whichever your host actually has.
-- **`Caught signal 11 (Segmentation fault)` inside `cugraph.force_atlas2()`**, deep in
-  `libucs.so`/`cuCtxGetDevice_v2` — a RAPIDS-version-vs-driver ABI mismatch. Hit with
-  `rapidsai/base:24.12-cuda12.5-py3.11` against a driver/CUDA-13.0-generation host; restricting to
-  one GPU and setting `UCX_TLS=tcp` did **not** fix it. Bumping the base image to
-  `rapidsai/base:25.10-cuda12.9-py3.11` did. If you hit this on a different host, check
-  `nvidia-smi` for your driver/CUDA version and try a `rapidsai/base` tag built against a closer
-  CUDA version (`docker manifest inspect rapidsai/base:<tag>` to check a tag exists before pulling).
+See [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — five real problems hit building and running this,
+each with the exact error text and the fix, not speculation.
 
 ## Diagrams
 
