@@ -1,0 +1,15 @@
+# GPU ForceAtlas2 layout step. Uses the RAPIDS base image for cuGraph/cudf
+# (these are not pip-installable in a slim image — they require matched
+# CUDA + RAPIDS builds). Requires the NVIDIA Container Toolkit on the host
+# and a compose GPU reservation (see docker-compose.yml's `layout` service).
+FROM rapidsai/base:24.12-cuda12.5-py3.11
+
+WORKDIR /app
+USER root
+
+COPY requirements-layout.txt .
+RUN pip install --no-cache-dir -r requirements-layout.txt
+
+COPY layout/ .
+
+CMD ["python", "compute_layout.py"]

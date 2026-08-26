@@ -1,0 +1,22 @@
+# Multi-stage build: the JS build stage compiles the CosmosGL frontend from
+# source (frontend/src/app.js + @cosmos.gl/graph) into a static bundle, so
+# the image never depends on a prebuilt artifact checked into git.
+
+FROM node:20-slim AS frontend-build
+WORKDIR /build
+COPY frontend/package.json .
+RUN npm install
+COPY frontend/ .
+RUN node build.mjs
+
+FROM python:3.11-slim
+WORKDIR /app
+
+COPY requirements-server.txt .
+RUN pip install --no-cache-dir -r requirements-server.txt
+
+COPY server/ .
+COPY --from=frontend-build /build/dist/cosmos_bundle.js ./static/cosmos_bundle.js
+
+EXPOSE 8686
+CMD ["python", "cosmos_server.py"]

@@ -1,0 +1,16 @@
+{
+  "name": "cosmosgl-dashboard-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "esbuild bundle of the CosmosGL dashboard frontend for cosmosgl-dashboard",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@cosmos.gl/graph": "^3.4.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

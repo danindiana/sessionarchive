@@ -122,6 +122,17 @@ Extracted here as a standalone, containerized tool — trading that automatic
 cross-linking for a project that clones, builds, and runs anywhere Docker
 does, independent of any other repo.
 
+## Related subproject: CosmosGL dashboard
+
+[`cosmosgl-dashboard/`](cosmosgl-dashboard/) is a from-scratch, fully
+containerized rebuild of the CosmosGL (`@cosmos.gl/graph`) WebGL graph
+viewer that also lives in `paper_processor/neo4j_viz/` — reconstructed here
+with a reproducible JS build (the original's bundle had no source committed),
+Docker images for both the HTTP/API backend and the GPU ForceAtlas2 layout
+step, and a pytest suite covering the API and the running container. It
+bundles its own Neo4j and is otherwise unrelated to the semantic-search code
+above them; see [`cosmosgl-dashboard/README.md`](cosmosgl-dashboard/README.md).
+
 ## License
 
 MIT
