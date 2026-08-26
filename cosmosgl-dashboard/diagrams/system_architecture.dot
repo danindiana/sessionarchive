@@ -1,0 +1,45 @@
+digraph system_architecture {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="cosmosgl-dashboard — component architecture (three compose services)"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.4 ranksep=0.5];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  subgraph cluster_build {
+    label="Frontend build (Dockerfile.server, stage 1)"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    src    [label="frontend/src/app.js\n(reconstructed source)" color="#00FFFF" fontcolor="#00FFFF" shape=box];
+    esbuild[label="esbuild\n(node:20-slim)" color="#00FFFF" fontcolor="#00FFFF" shape=box3d];
+    bundle [label="dist/cosmos_bundle.js" color="#00FFFF" fontcolor="#00FFFF" shape=folder];
+    src -> esbuild -> bundle [color="#00FFFF"];
+  }
+
+  subgraph cluster_server {
+    label="server (Dockerfile.server, stage 2 — python:3.11-slim)"; fontcolor="#00FF41"; color="#00FF41"; style=dashed;
+    httpd  [label="cosmos_server.py\nThreadingHTTPServer :8686" color="#00FF41" fontcolor="#00FF41" shape=box3d];
+    api    [label="/api/graph\n/api/node/<id>\n/pdf/<id>" color="#00FF41" fontcolor="#00FF41" shape=box];
+    static [label="static/\ncosmos_dashboard.html\n+ cosmos_bundle.js" color="#00FF41" fontcolor="#00FF41" shape=folder];
+    httpd -> api [color="#00FF41"]; httpd -> static [color="#00FF41"];
+  }
+
+  bundle -> static [color="#00FFFF" style=dashed label="COPY --from=frontend-build"];
+
+  subgraph cluster_neo4j {
+    label="neo4j (bundled, own compose service)"; fontcolor="#FF00FF"; color="#FF00FF"; style=dashed;
+    neo4j [label="neo4j:latest\nbolt://neo4j:7687\nhttp 127.0.0.1:27474" color="#FF00FF" fontcolor="#FF00FF" shape=doubleoctagon];
+    vol   [label="./data/neo4j\n./data/neo4j-logs\n(bind mounts, owned by\ncontainer uid 7474)" color="#FF00FF" fontcolor="#FF00FF" shape=cylinder];
+    neo4j -> vol [color="#FF00FF"];
+  }
+
+  subgraph cluster_layout {
+    label="layout (Dockerfile.layout — one-shot GPU job)"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    compute [label="compute_layout.py\ncuGraph force_atlas2\n(rapidsai/base image)" color="#FFFF00" fontcolor="#FFFF00" shape=box3d];
+    gpu     [label="NVIDIA GPU\n(nvidia-container-toolkit)" color="#FFFF00" fontcolor="#FFFF00" shape=doubleoctagon];
+    compute -> gpu [color="#FFFF00" dir=both];
+  }
+
+  api -> neo4j [color="#FF00FF" label="bolt\nGET queries"];
+  compute -> neo4j [color="#FFFF00" label="bolt\nread edges,\nwrite fx/fy"];
+
+  browser [label="Browser\nhttp://localhost:28686" color="#7FFF00" fontcolor="#7FFF00" shape=doubleoctagon];
+  browser -> httpd [color="#7FFF00" dir=both label="HTTP/JSON"];
+}

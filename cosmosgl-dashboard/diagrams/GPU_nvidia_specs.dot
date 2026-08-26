@@ -1,0 +1,48 @@
+digraph GPU_nvidia_specs {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="cosmosgl-dashboard — GPU / NVIDIA layout pipeline specifics"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.4 ranksep=0.5];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  subgraph cluster_hw {
+    label="Host GPU hardware (this machine)"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    gpu0 [label="GPU 0: RTX 5080" color="#00FFFF" fontcolor="#00FFFF" shape=doubleoctagon];
+    gpu1 [label="GPU 1: RTX 3080" color="#00FFFF" fontcolor="#00FFFF" shape=doubleoctagon];
+    vram [label="~26.5GB combined VRAM\n(shared with Ollama on\nthis host — not exclusive)" color="#00FFFF" fontcolor="#00FFFF" shape=note];
+    gpu0 -> vram [color="#00FFFF" style=dashed]; gpu1 -> vram [color="#00FFFF" style=dashed];
+  }
+
+  subgraph cluster_toolkit {
+    label="Host prerequisite"; fontcolor="#FF6600"; color="#FF6600"; style=dashed;
+    nct [label="NVIDIA Container Toolkit\nmust be installed + configured\nfor Docker to pass GPUs through" color="#FF6600" fontcolor="#FF6600" shape=doubleoctagon];
+  }
+
+  subgraph cluster_compose {
+    label="docker-compose.yml — layout service"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    reservation [label="deploy.resources.reservations.devices:\n  - driver: nvidia\n    count: 1\n    capabilities: [gpu]" color="#FFFF00" fontcolor="#FFFF00" shape=note];
+    oneshot [label="no default 'command:' —\nrun explicitly via\ndocker compose run --rm layout\n(one-shot job, not a daemon)" color="#FFFF00" fontcolor="#FFFF00"];
+  }
+
+  subgraph cluster_image {
+    label="Dockerfile.layout"; fontcolor="#FF00FF"; color="#FF00FF"; style=dashed;
+    base [label="FROM rapidsai/base:\n24.12-cuda12.5-py3.11\n(cudf/cugraph aren't\npip-installable in a\nslim image — need a\nmatched CUDA+RAPIDS build)" color="#FF00FF" fontcolor="#FF00FF" shape=box3d];
+  }
+
+  subgraph cluster_algo {
+    label="compute_layout.py"; fontcolor="#00FF41"; color="#00FF41"; style=dashed;
+    edges  [label="1. Read (source, target)\nedges from Neo4j via bolt" color="#00FF41" fontcolor="#00FF41"];
+    gdf    [label="2. Load into a cudf.DataFrame,\nbuild a cugraph.Graph\n(renumber=True)" color="#00FF41" fontcolor="#00FF41"];
+    fa2    [label="3. cugraph.force_atlas2(\n  max_iter=LAYOUT_MAX_ITER (500),\n  strong_gravity_mode=False,\n  outbound_attraction_distribution=True,\n  lin_log_mode=False)" color="#00FF41" fontcolor="#00FF41"];
+    write  [label="4. Write fx = x * LAYOUT_SCALE (20),\nfy = y * LAYOUT_SCALE back onto\neach node in Neo4j" color="#00FF41" fontcolor="#00FF41"];
+    edges -> gdf -> fa2 -> write [color="#00FF41"];
+  }
+
+  vram -> base [color="#FF00FF" style=dashed];
+  nct -> reservation [color="#FF6600" style=dashed];
+  reservation -> oneshot [color="#FFFF00"];
+  base -> edges [color="#00FF41" style=dashed];
+
+  note [label="Result: cosmos_server.py's /api/graph\nserves fx/fy directly — the frontend\nrenders enableSimulation:false, a static\nGPU-precomputed layout, no browser-side\nphysics simulation." shape=plaintext color="#7FFF00" fontcolor="#7FFF00"];
+  write -> note [style=dashed color="#7FFF00"];
+}

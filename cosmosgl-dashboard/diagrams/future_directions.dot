@@ -1,0 +1,34 @@
+digraph future {
+  graph [bgcolor="black" rankdir=LR fontname="Courier New"
+         label="cosmosgl-dashboard — Future Directions Roadmap"
+         labelloc=t fontcolor="#00FF41" fontsize=17 pad=0.5 ranksep=0.9 nodesep=0.3];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [style=invis];
+
+  subgraph cluster_done {
+    label="✓ Shipped"; fontcolor="#00FF41"; color="#00FF41"; style=dashed;
+    d1 [label="server + layout + frontend\nall containerized" color="#00FF41" fontcolor="#00FF41"];
+    d2 [label="reproducible esbuild\npipeline, no prebuilt\nartifact committed" color="#00FF41" fontcolor="#00FF41"];
+    d3 [label="own bundled Neo4j,\nindependent of\npaper_processor" color="#00FF41" fontcolor="#00FF41"];
+    d4 [label="9 tests passing:\n5 unit + 4 container\nsmoke, verified live" color="#00FF41" fontcolor="#00FF41"];
+    d5 [label="GPU layout via\nnvidia-docker\n(rapidsai/base)" color="#00FF41" fontcolor="#00FF41"];
+  }
+
+  subgraph cluster_soon {
+    label="Proposed — next"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    n1 [label="Playwright browser E2E:\nassert the WebGL canvas\nactually renders points" color="#FFFF00" fontcolor="#FFFF00"];
+    n2 [label="GitHub Actions CI for\nthe unit + smoke suites\n(layout excluded, no GPU\nrunner available)" color="#FFFF00" fontcolor="#FFFF00"];
+    n3 [label="publish the server image\nto a registry instead of\nbuild-on-first-run" color="#FFFF00" fontcolor="#FFFF00"];
+  }
+
+  subgraph cluster_later {
+    label="Proposed — later / at scale"; fontcolor="#FF6600"; color="#FF6600"; style=dashed;
+    l1 [label="multi-arch build\n(arm64 for the non-GPU\nserver image)" color="#FF6600" fontcolor="#FF6600"];
+    l2 [label="auth in front of the\ndashboard before any\nWAN exposure" color="#FF6600" fontcolor="#FF6600"];
+    l3 [label="an importer with parity\nto paper_processor's\nneo4j_importer.py, so this\ncan ingest real datasets\nstandalone" color="#FF6600" fontcolor="#FF6600"];
+  }
+
+  d1 -> n1 [style=invis]; d2 -> n2 [style=invis]; d3 -> n3 [style=invis];
+  n1 -> l1 [style=invis]; n2 -> l2 [style=invis]; n3 -> l3 [style=invis];
+  d4 -> d5 [style=invis];
+}

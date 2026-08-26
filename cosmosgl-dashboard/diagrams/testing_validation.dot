@@ -1,0 +1,42 @@
+digraph testing_validation {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="cosmosgl-dashboard — testing & validation flow (9/9 passing)"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.4 ranksep=0.5];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  subgraph cluster_unit {
+    label="test_cosmos_server_unit.py — 5 tests, no Docker"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    mock  [label="monkeypatch\nneo4j.GraphDatabase.driver\nwith an in-memory FakeDriver" color="#00FFFF" fontcolor="#00FFFF"];
+    u1 [label="fetch_graph():\nisolated node fx/fy\ndefault to 0.0" color="#00FFFF" fontcolor="#00FFFF"];
+    u2 [label="fetch_node_detail():\nfound row vs. None\nwhen missing" color="#00FFFF" fontcolor="#00FFFF"];
+    u3 [label="fetch_pdf_path():\nreturns stored path\nor None" color="#00FFFF" fontcolor="#00FFFF"];
+    mock -> u1 [color="#00FFFF"]; mock -> u2 [color="#00FFFF"]; mock -> u3 [color="#00FFFF"];
+  }
+
+  subgraph cluster_smoke {
+    label="test_container_smoke.py — 4 tests, real stack"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    build [label="docker compose build server" color="#FFFF00" fontcolor="#FFFF00"];
+    up    [label="docker compose up -d\nneo4j server" color="#FFFF00" fontcolor="#FFFF00"];
+    wait  [label="poll docker inspect\n.State.Health.Status\nuntil 'healthy'" color="#FFFF00" fontcolor="#FFFF00"];
+    seed  [label="seed.cypher via the\nneo4j driver: Paper,\nConcept, isolated Theorem" color="#FFFF00" fontcolor="#FFFF00"];
+    s1 [label="GET / → 200,\ndashboard HTML" color="#FFFF00" fontcolor="#FFFF00"];
+    s2 [label="GET /api/graph → seeded\nnodes/edges present,\nisolated node fx/fy = 0.0" color="#FFFF00" fontcolor="#FFFF00"];
+    s3 [label="GET /api/node/<id> → 200\nfound, 404 when missing" color="#FFFF00" fontcolor="#FFFF00"];
+    s4 [label="GET /pdf/<id> → 404 +\n'not available on disk'\n(seeded path doesn't exist)" color="#FFFF00" fontcolor="#FFFF00"];
+    teardown [label="docker compose down -v +\nthrowaway-container cleanup\nof uid-7474-owned data/" color="#FFFF00" fontcolor="#FFFF00"];
+    build -> up -> wait -> seed [color="#FFFF00"];
+    seed -> s1 [color="#FFFF00"]; seed -> s2 [color="#FFFF00"]; seed -> s3 [color="#FFFF00"]; seed -> s4 [color="#FFFF00"];
+    s1 -> teardown [color="#FFFF00"]; s2 -> teardown [color="#FFFF00"]; s3 -> teardown [color="#FFFF00"]; s4 -> teardown [color="#FFFF00"];
+  }
+
+  subgraph cluster_manual {
+    label="Manual — not automated"; fontcolor="#FF6600"; color="#FF6600"; style=dashed;
+    gpucheck [label="docker compose run --rm layout\nthen eyeball fx/fy in the\nNeo4j Browser at :27474" color="#FF6600" fontcolor="#FF6600"];
+    reason [label="excluded from the automated\nsuite: needs a real NVIDIA GPU\n+ toolkit, not guaranteed on\nevery CI/dev host" shape=note color="#FF6600" fontcolor="#FF6600"];
+    gpucheck -> reason [color="#FF6600" style=dashed];
+  }
+
+  mock -> build [style=invis];
+  teardown -> gpucheck [style=invis];
+}

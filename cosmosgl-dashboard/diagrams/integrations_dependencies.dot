@@ -1,0 +1,50 @@
+digraph integrations_dependencies {
+  graph [bgcolor="black" rankdir=LR fontname="Courier New"
+         label="cosmosgl-dashboard — external integrations & dependencies"
+         labelloc=t fontcolor="#00FF41" fontsize=16 pad=0.5 nodesep=0.4 ranksep=0.6];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  root [label="cosmosgl-dashboard" shape=box3d color="#00FF41" fontcolor="#00FF41"];
+
+  subgraph cluster_js {
+    label="Frontend (npm, via esbuild)"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    cosmosgl [label="@cosmos.gl/graph ^3.4.0\nWebGL point/link renderer" color="#00FFFF" fontcolor="#00FFFF"];
+    luma     [label="@luma.gl/{core,engine,\nshadertools,webgl} ~9.3.6\nGPU rendering backend" color="#00FFFF" fontcolor="#00FFFF"];
+    d3       [label="d3-{array,color,drag,ease,\nscale,selection,transition,zoom}\ninteraction + scales" color="#00FFFF" fontcolor="#00FFFF"];
+    misc     [label="dompurify, gl-bench,\ngl-matrix, random" color="#00FFFF" fontcolor="#00FFFF"];
+    esbuild  [label="esbuild ^0.28.2\n(build tool, not shipped)" color="#00FFFF" fontcolor="#00FFFF" shape=note];
+  }
+
+  subgraph cluster_py {
+    label="Backend (pip)"; fontcolor="#00FF41"; color="#00FF41"; style=dashed;
+    neo4jdrv [label="neo4j>=5.10.0\nGraphDatabase driver" color="#00FF41" fontcolor="#00FF41"];
+  }
+
+  subgraph cluster_gpu {
+    label="GPU layout (RAPIDS)"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    cugraph [label="cugraph\nforce_atlas2()" color="#FFFF00" fontcolor="#FFFF00"];
+    cudf    [label="cudf\nGPU dataframes" color="#FFFF00" fontcolor="#FFFF00"];
+    pandas  [label="pandas\nedge list staging" color="#FFFF00" fontcolor="#FFFF00"];
+  }
+
+  subgraph cluster_images {
+    label="Docker base images"; fontcolor="#FF00FF"; color="#FF00FF"; style=dashed;
+    node_img  [label="node:20-slim\n(frontend build stage)" color="#FF00FF" fontcolor="#FF00FF" shape=doubleoctagon];
+    py_img    [label="python:3.11-slim\n(server runtime)" color="#FF00FF" fontcolor="#FF00FF" shape=doubleoctagon];
+    rapids_img[label="rapidsai/base:\n24.12-cuda12.5-py3.11\n(layout runtime)" color="#FF00FF" fontcolor="#FF00FF" shape=doubleoctagon];
+    neo4j_img [label="neo4j:latest" color="#FF00FF" fontcolor="#FF00FF" shape=doubleoctagon];
+    toolkit   [label="NVIDIA Container Toolkit\n(host prerequisite)" color="#FF6600" fontcolor="#FF6600" shape=doubleoctagon];
+  }
+
+  root -> cosmosgl [color="#00FFFF"]; cosmosgl -> luma [color="#00FFFF"]; cosmosgl -> d3 [color="#00FFFF"]; cosmosgl -> misc [color="#00FFFF"];
+  root -> esbuild [color="#00FFFF" style=dashed];
+  root -> neo4jdrv [color="#00FF41"];
+  root -> cugraph [color="#FFFF00"]; cugraph -> cudf [color="#FFFF00"]; cugraph -> pandas [color="#FFFF00"];
+
+  esbuild -> node_img [color="#FF00FF" style=dashed];
+  neo4jdrv -> py_img [color="#FF00FF" style=dashed];
+  cugraph -> rapids_img [color="#FF00FF" style=dashed];
+  rapids_img -> toolkit [color="#FF6600" style=dashed label="requires"];
+  root -> neo4j_img [color="#FF00FF" style=dashed label="bundled"];
+}

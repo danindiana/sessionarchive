@@ -1,0 +1,8 @@
+digraph dependency_ascii_tree {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="cosmosgl-dashboard — @cosmos.gl/graph npm dependency tree"
+         labelloc=t fontcolor="#00FF41" fontsize=16 pad=0.6];
+  node [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=11 penwidth=2.0 shape=plaintext];
+
+  tree [fontcolor="#00FFFF" label="@cosmos.gl/graph  ^3.4.0\l├── @luma.gl/core        ~9.3.6   (device abstraction)\l├── @luma.gl/engine      ~9.3.6   (scenegraph, animation loop)\l├── @luma.gl/shadertools  ~9.3.6   (shader modules)\l├── @luma.gl/webgl        ~9.3.6   (WebGL2 backend)\l├── d3-array              ^3.2.0   (typed array helpers)\l├── d3-color              ^3.1.0   (color interpolation)\l├── d3-drag               ^3.0.0   (pointer drag events)\l├── d3-ease               ^3.0.1   (easing functions)\l├── d3-scale              ^4.0.2   (point size/color scales)\l├── d3-selection          ^3.0.0   (DOM binding)\l├── d3-transition         ^3.0.1   (animated transitions)\l├── d3-zoom               ^3.0.0   (pan/zoom camera control)\l├── dompurify             ^3.2.6   (sanitizes label/tooltip HTML)\l├── gl-bench              ^1.0.42  (on-screen FPS/GPU meter)\l├── gl-matrix             ^3.4.3   (vector/matrix math)\l└── random                ^4.1.0   (seeded RNG for jitter/layout)\l\ldevDependencies:\l└── esbuild               ^0.28.2  (bundler — build-time only,\l                                    not shipped in the image)\l"];
+}

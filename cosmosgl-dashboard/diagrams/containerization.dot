@@ -1,0 +1,47 @@
+digraph containerization {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="cosmosgl-dashboard — containerization detail"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.4 ranksep=0.5];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  subgraph cluster_dserver {
+    label="Dockerfile.server (multi-stage)"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    s1 [label="FROM node:20-slim AS\nfrontend-build\nWORKDIR /build" color="#00FFFF" fontcolor="#00FFFF" shape=box3d];
+    s2 [label="COPY frontend/package.json .\nRUN npm install" color="#00FFFF" fontcolor="#00FFFF"];
+    s3 [label="COPY frontend/ .\nRUN node build.mjs\n→ dist/cosmos_bundle.js" color="#00FFFF" fontcolor="#00FFFF"];
+    s4 [label="FROM python:3.11-slim\nWORKDIR /app" color="#00FFFF" fontcolor="#00FFFF" shape=box3d];
+    s5 [label="COPY requirements-server.txt .\nRUN pip install" color="#00FFFF" fontcolor="#00FFFF"];
+    s6 [label="COPY server/ .\nCOPY --from=frontend-build\n/build/dist/cosmos_bundle.js\n./static/cosmos_bundle.js" color="#00FFFF" fontcolor="#00FFFF"];
+    s7 [label="EXPOSE 8686\nCMD python cosmos_server.py" color="#00FFFF" fontcolor="#00FFFF"];
+    s1 -> s2 -> s3 [color="#00FFFF"]; s4 -> s5 -> s6 -> s7 [color="#00FFFF"];
+    s3 -> s6 [color="#00FFFF" style=dashed label="COPY --from"];
+  }
+
+  subgraph cluster_dlayout {
+    label="Dockerfile.layout (single-stage)"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    l1 [label="FROM rapidsai/base:\n24.12-cuda12.5-py3.11" color="#FFFF00" fontcolor="#FFFF00" shape=box3d];
+    l2 [label="COPY requirements-layout.txt .\nRUN pip install" color="#FFFF00" fontcolor="#FFFF00"];
+    l3 [label="COPY layout/ .\nCMD python compute_layout.py" color="#FFFF00" fontcolor="#FFFF00"];
+    l1 -> l2 -> l3 [color="#FFFF00"];
+  }
+
+  subgraph cluster_compose {
+    label="docker-compose.yml"; fontcolor="#FF00FF"; color="#FF00FF"; style=dashed;
+    c_neo4j  [label="neo4j\nports 27474/27687\n(.env-overridable)" color="#FF00FF" fontcolor="#FF00FF" shape=doubleoctagon];
+    c_server [label="server\nbuild: Dockerfile.server\nhealthcheck: GET /api/graph\nevery 5s, 20 retries" color="#FF00FF" fontcolor="#FF00FF" shape=doubleoctagon];
+    c_layout [label="layout\nbuild: Dockerfile.layout\ndeploy.resources.reservations\n.devices: nvidia/gpu\nno default command (one-shot)" color="#FF00FF" fontcolor="#FF00FF" shape=doubleoctagon];
+    c_server -> c_neo4j [color="#FF00FF" label="depends_on\nbolt://neo4j:7687"];
+    c_layout -> c_neo4j [color="#FF00FF" label="depends_on\nbolt://neo4j:7687"];
+  }
+
+  subgraph cluster_exclude {
+    label=".dockerignore / .env"; fontcolor="#7FFF00"; color="#7FFF00"; style=dashed;
+    excl [label="data/, .git/, .env,\nfrontend/node_modules/,\nfrontend/dist/, tests/\nexcluded from build context" color="#7FFF00" fontcolor="#7FFF00" shape=note];
+    envf [label=".env: NEO4J_HTTP_PORT,\nNEO4J_BOLT_PORT,\nDASHBOARD_PORT" color="#7FFF00" fontcolor="#7FFF00" shape=note];
+  }
+
+  s7 -> c_server [color="#00FFFF" style=dashed label="builds into"];
+  l3 -> c_layout [color="#FFFF00" style=dashed label="builds into"];
+  excl -> c_server [style=invis]; envf -> c_neo4j [style=invis];
+}

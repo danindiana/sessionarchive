@@ -1,0 +1,29 @@
+digraph portability {
+  graph [bgcolor="black" rankdir=LR fontname="Courier New"
+         label="cosmosgl-dashboard — portability (containerized, but GPU-locked for layout)"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.4];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [style=invis];
+
+  subgraph cluster_portable {
+    label="Portable out of the box"; fontcolor="#00FF41"; color="#00FF41"; style=dashed;
+    p1 [label="Neo4j — bundled in\ncompose, own volume,\nindependent of\npaper_processor" color="#00FF41" fontcolor="#00FF41"];
+    p2 [label="server + frontend build —\nplain python:3.11-slim /\nnode:20-slim, no GPU\nneeded to view the graph" color="#00FF41" fontcolor="#00FF41"];
+    p3 [label="Connection details are\nenv-var configured\n(NEO4J_URL/USER/PASSWORD/\nPORT), no hardcoded paths" color="#00FF41" fontcolor="#00FF41"];
+    p4 [label="Test suite (unit + smoke)\nruns on any Docker host,\nno GPU required" color="#00FF41" fontcolor="#00FF41"];
+  }
+
+  subgraph cluster_gpulocked {
+    label="GPU-locked: the layout step"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    g1 [label="compute_layout.py requires\ncudf/cugraph — no CPU\nfallback exists" color="#FFFF00" fontcolor="#FFFF00"];
+    g2 [label="rapidsai/base image is\nlarge and CUDA-version-\npinned (24.12-cuda12.5)" color="#FFFF00" fontcolor="#FFFF00"];
+  }
+
+  subgraph cluster_platform {
+    label="Platform-specific"; fontcolor="#FF6600"; color="#FF6600"; style=dashed;
+    l1 [label="Linux + NVIDIA Container\nToolkit needed for real\nGPU passthrough" color="#FF6600" fontcolor="#FF6600"];
+    l2 [label="Mac/Windows: no native GPU\npassthrough for cuGraph —\nneeds WSL2+CUDA, or skip\n'layout' and set fx/fy by hand" color="#FF6600" fontcolor="#FF6600"];
+  }
+
+  p1 -> g1 [style=invis]; p2 -> g2 [style=invis]; p3 -> l1 [style=invis]; p4 -> l2 [style=invis];
+}

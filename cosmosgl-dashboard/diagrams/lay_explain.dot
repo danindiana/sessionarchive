@@ -1,0 +1,25 @@
+digraph lay_explain {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="cosmosgl-dashboard — explained in plain language"
+         labelloc=t fontcolor="#00FF41" fontsize=16 pad=0.6 nodesep=0.5 ranksep=0.6];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=11 penwidth=2.0 shape=box];
+  edge  [fontname="Courier New" fontsize=10 penwidth=2.0 color="#00FF41"];
+
+  q [label="What is this?" shape=box3d color="#00FF41" fontcolor="#00FF41"];
+
+  a1 [label="A 3D 'star map' of your data.\nEach dot is one thing — a paper,\nan idea, a proof, a piece of code —\nand lines show how they connect." color="#00FFFF" fontcolor="#00FFFF"];
+
+  a2 [label="Dots are color-coded and sized\nby what kind of thing they are\n(papers are big and red, ideas\nare blue and smaller, and so on)." color="#FFFF00" fontcolor="#FFFF00"];
+
+  a3 [label="Before you ever open it, a GPU\nruns a one-time 'settle into place'\nsimulation — like shaking a box of\nmarbles until they stop moving —\nso the map loads instantly instead\nof jittering into position live." color="#FF00FF" fontcolor="#FF00FF"];
+
+  a4 [label="Double-clicking a dot pops open\nits details — and for papers,\na direct link to read the source\nPDF." color="#7FFF00" fontcolor="#7FFF00"];
+
+  a5 [label="The whole thing ships as a\nself-contained 'box' (a container)\nwith everything it needs already\ninside — it runs the same way on\nany computer, no setup headaches." color="#FF6600" fontcolor="#FF6600"];
+
+  a6 [label="A second, separate box holds the\ndatabase that stores all the dots\nand connections in the first place." color="#00FF41" fontcolor="#00FF41"];
+
+  q -> a1 -> a2 -> a3 -> a4;
+  a1 -> a5 [style=dashed];
+  a1 -> a6 [style=dashed];
+}

@@ -77,6 +77,21 @@ explanation when the stored path doesn't exist on disk) against the real running
 container — then tears the stack down. It does not require a GPU and excludes the
 `layout` service; verify that one manually as described above.
 
+## Diagrams
+
+| Diagram | Covers |
+|---|---|
+| [`system_architecture`](diagrams/system_architecture.png) | The three compose services, the frontend build pipeline, ports, and volumes |
+| [`integrations_dependencies`](diagrams/integrations_dependencies.png) | Every external dependency — npm, pip, RAPIDS, Docker base images |
+| [`dependency_ascii_tree`](diagrams/dependency_ascii_tree.png) | The `@cosmos.gl/graph` npm dependency tree, ASCII-tree style |
+| [`catch22s`](diagrams/catch22s.png) | Five real problems hit building this and how each was fixed |
+| [`future_directions`](diagrams/future_directions.png) | Shipped vs. proposed-next vs. proposed-later roadmap |
+| [`GPU_nvidia_specs`](diagrams/GPU_nvidia_specs.png) | The GPU layout pipeline: hardware, toolkit, compose GPU reservation, `force_atlas2` params |
+| [`testing_validation`](diagrams/testing_validation.png) | The full test flow — unit → container smoke → manual GPU check — 9/9 passing |
+| [`containerization`](diagrams/containerization.png) | Both Dockerfiles stage-by-stage, plus the compose service definitions |
+| [`portability`](diagrams/portability.png) | What's portable out of the box vs. GPU-locked vs. platform-specific |
+| [`lay_explain`](diagrams/lay_explain.png) | What this is, explained without jargon |
+
 ## License
 
 MIT (same as the parent [`sessionarchive`](../README.md) project).

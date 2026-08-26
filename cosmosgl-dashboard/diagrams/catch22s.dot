@@ -1,0 +1,44 @@
+digraph catch22s {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="cosmosgl-dashboard — catch-22s hit building this"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.5 ranksep=0.4];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  subgraph cluster_bundle {
+    label="No source for the JS bundle, only the prebuilt output"; fontcolor="#FF3333"; color="#FF3333"; style=dashed;
+    b1 [label="paper_processor's cosmos_bundle.js\nwas committed pre-built (696KB) —\nonly node_modules/ + a lockfile\nsurvived, the actual app glue\ncode was never checked in" color="#FF3333" fontcolor="#FF3333"];
+    b2 [label="'deeper containerization'\nis meaningless if the Docker\nbuild still has to trust an\nartifact nobody can regenerate" color="#FF3333" fontcolor="#FF3333"];
+    b3 [label="fix: located the single line\n(3164 of 3169) holding all app\nglue code, decompiled the minified\nnames back to real identifiers,\nrewrote as frontend/src/app.js" color="#FF3333" fontcolor="#FF3333"];
+    b1 -> b2 -> b3 [color="#FF3333"];
+  }
+
+  subgraph cluster_copypath {
+    label="Multi-stage COPY --from path escaped the build context"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    p1 [label="build.mjs's outfile used\n'../server/static/...' — convenient\nfor local dev, but the frontend-build\nstage's WORKDIR /build has no\nsibling /server directory" color="#00FFFF" fontcolor="#00FFFF"];
+    p2 [label="fix: outfile changed to a local\n'dist/cosmos_bundle.js', final\nstage does COPY --from=frontend-build\n/build/dist/cosmos_bundle.js" color="#00FFFF" fontcolor="#00FFFF"];
+    p1 -> p2 [color="#00FFFF"];
+  }
+
+  subgraph cluster_perms {
+    label="Bind-mounted Neo4j data owned by the container's uid"; fontcolor="#FFFF00"; color="#FFFF00"; style=dashed;
+    n1 [label="neo4j:latest writes\n./data/neo4j as uid 7474 —\nhost user (jeb) can't rmtree it,\n'compose down -v' doesn't touch\nbind mounts anyway" color="#FFFF00" fontcolor="#FFFF00"];
+    n2 [label="first fix attempt (shutil.rmtree,\nignore_errors=True) silently\nno-opped — verified via ls -la\nshowing files still owned by 7474\nafter the fixture 'succeeded'" color="#FFFF00" fontcolor="#FFFF00"];
+    n3 [label="real fix: a throwaway alpine\ncontainer bind-mounts the same\n./data dir and rm -rf's it as\nroot, sidestepping host permissions\nentirely — no sudo required" color="#FFFF00" fontcolor="#FFFF00"];
+    n1 -> n2 -> n3 [color="#FFFF00"];
+  }
+
+  subgraph cluster_health {
+    label="Healthcheck racing Neo4j's slow cold start"; fontcolor="#FF6600"; color="#FF6600"; style=dashed;
+    h1 [label="server starts fast, but every\n/api/graph call fails until\nNeo4j finishes booting bolt —\na naive healthcheck flaps or\nfails the whole compose up" color="#FF6600" fontcolor="#FF6600"];
+    h2 [label="fix: healthcheck just keeps\nretrying (interval 5s x 20,\nstart_period 10s) — the smoke\ntest polls 'docker inspect\n.State.Health.Status' instead\nof assuming instant readiness" color="#FF6600" fontcolor="#FF6600"];
+    h1 -> h2 [color="#FF6600"];
+  }
+
+  subgraph cluster_gpu_dep {
+    label="RAPIDS isn't pip-installable in a slim image"; fontcolor="#FF00FF"; color="#FF00FF"; style=dashed;
+    g1 [label="cudf/cugraph need matched\nCUDA + RAPIDS builds — no plain\n'pip install cugraph' into\npython:3.11-slim works" color="#FF00FF" fontcolor="#FF00FF"];
+    g2 [label="fix: Dockerfile.layout starts\nFROM rapidsai/base:24.12-cuda12.5-\npy3.11 instead, a heavy but correct\nbase image; layout stays a one-shot\njob (docker compose run), not a\ndaemon, so image size doesn't\nmatter as much" color="#FF00FF" fontcolor="#FF00FF"];
+    g1 -> g2 [color="#FF00FF"];
+  }
+}
