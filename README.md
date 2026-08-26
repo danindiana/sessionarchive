@@ -95,6 +95,23 @@ ephemeral feedback, no persisted model).
 | [`cli_reference`](diagrams/cli_reference.png) | All three subcommands and their exact flags |
 | [`before_after`](diagrams/before_after.png) | The actual migration: embedded-in-paper_processor vs. standalone |
 
+## Testing
+
+[`tests/test_label_interactive.py`](tests/test_label_interactive.py) verifies
+`label`'s raw single-keypress TTY interaction end to end — the one piece that
+can't be tested by piping bytes into stdin, since `termios.tcgetattr`/
+`tty.setraw()` require a real tty device. It allocates a real pseudo-terminal
+(Python's `pty` module) and drives `docker compose run --rm -it app label`
+through it exactly as a human typing would: ingests a small synthetic
+fixture corpus ([`tests/fixtures/corpus/`](tests/fixtures/corpus/)), labels
+two chunks, forces a retrain, quits, and asserts the results (labels,
+trained probe) actually persisted correctly. Requires the stack already up:
+
+```bash
+docker compose up -d neo4j    # + ollama serve running, with a model pulled
+python3 tests/test_label_interactive.py
+```
+
 ## History
 
 Started as `session_archive/` inside
