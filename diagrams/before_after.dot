@@ -1,0 +1,32 @@
+digraph before_after {
+  graph [bgcolor="black" rankdir=TB fontname="Courier New"
+         label="sessionarchive — embedded (before) vs. standalone (after)"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.5 ranksep=0.4];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [style=invis];
+
+  subgraph cluster_before {
+    label="Before — paper_processor/session_archive/"; fontcolor="#FF6600"; color="#FF6600"; style=dashed;
+    b1 [label="4 separate scripts:\ningest_sessions.py, query_sessions.py,\nlabel_sessions.py, relevance_probe.py" color="#FF6600" fontcolor="#FF6600"];
+    b2 [label="Shared paper-processor-neo4j —\nSession/Concept nodes automatically\ncross-link with AI/ML paper Concepts" color="#FF6600" fontcolor="#FF6600"];
+    b3 [label="Runs in paper_processor's venv\n(shared CUDA/RAPIDS stack)" color="#FF6600" fontcolor="#FF6600"];
+    b4 [label="Hardcoded worlock paths:\n~/Documents/claude_creations,\n/mnt/nvme_staging/session_archive_index" color="#FF6600" fontcolor="#FF6600"];
+    b5 [label="markdown_parsing reused via\nsys.path hack into neo4j_importer.py" color="#FF6600" fontcolor="#FF6600"];
+    b1 -> b2 -> b3 -> b4 -> b5 [style=invis];
+  }
+
+  subgraph cluster_after {
+    label="After — standalone sessionarchive repo"; fontcolor="#00FF41"; color="#00FF41"; style=dashed;
+    a1 [label="1 CLI, 3 subcommands:\nsessionarchive ingest|query|label" color="#00FF41" fontcolor="#00FF41"];
+    a2 [label="Bundled dedicated Neo4j —\nfully standalone, no cross-linking\nwith any other graph" color="#00FF41" fontcolor="#00FF41"];
+    a3 [label="Runs in one Docker image\n(own pinned dependencies)" color="#00FF41" fontcolor="#00FF41"];
+    a4 [label="Configurable via env vars +\nDocker volumes: --root/--index-dir\ndefault to /data/corpus, /data/index" color="#00FF41" fontcolor="#00FF41"];
+    a5 [label="markdown_parsing.py vendored —\nzero dependency on paper_processor" color="#00FF41" fontcolor="#00FF41"];
+    a1 -> a2 -> a3 -> a4 -> a5 [style=invis];
+  }
+
+  b1 -> a1 [style=invis]; b2 -> a2 [style=invis]; b3 -> a3 [style=invis];
+  b4 -> a4 [style=invis]; b5 -> a5 [style=invis];
+
+  tradeoff [label="Trade-off made knowingly: standalone portability\ntraded away automatic Concept cross-linking with\npaper_processor's AI/ML papers graph." shape=plaintext color="#FFFF00" fontcolor="#FFFF00"];
+}

@@ -1,0 +1,33 @@
+digraph data_model {
+  graph [bgcolor="black" rankdir=LR fontname="Courier New"
+         label="sessionarchive — data model (graph + vector index)"
+         labelloc=t fontcolor="#00FF41" fontsize=15 pad=0.5 nodesep=0.5];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  subgraph cluster_neo4j {
+    label="Neo4j graph — bundled, dedicated (not shared with anything)"; fontcolor="#7FFF00"; color="#7FFF00"; style=dashed;
+    session [label="(Session)\ntitle, path, slug,\ndate, summary" color="#7FFF00" fontcolor="#7FFF00" shape=doubleoctagon];
+    concept [label="(Concept)\nname, definition" color="#7FFF00" fontcolor="#7FFF00" shape=doubleoctagon];
+    session -> concept [color="#7FFF00" label="[:MENTIONS]"];
+  }
+
+  subgraph cluster_faiss {
+    label="FAISS vector index — ./data/index/"; fontcolor="#00FFFF"; color="#00FFFF"; style=dashed;
+    idxfile [label="index.faiss\nIndexFlatIP, 1024-d\n(bge-m3)" color="#00FFFF" fontcolor="#00FFFF" shape=cylinder];
+    idmap   [label="id_map.json\n[{session, path,\nchunk_idx, snippet}]" color="#00FFFF" fontcolor="#00FFFF" shape=note];
+    idxfile -> idmap [color="#00FFFF" label="row i ↔ entry i"];
+  }
+
+  subgraph cluster_labels {
+    label="Relevance feedback (optional, from `label`)"; fontcolor="#FF00FF"; color="#FF00FF"; style=dashed;
+    labels [label="relevance_labels.json\n[{key, path, chunk_idx,\nsession, label, labeled_at}]" color="#FF00FF" fontcolor="#FF00FF" shape=note];
+    probe  [label="relevance_probe.pt\nMLPProbe state_dict\n+ {in_dim, trained}" color="#FF00FF" fontcolor="#FF00FF" shape=note];
+    labels -> probe [color="#FF00FF" label="fit()"];
+  }
+
+  session -> idmap [color="#FFFF00" style=dashed label="path (join key)"];
+  idmap -> labels [color="#FFFF00" style=dashed label="key = path::chunk_idx"];
+
+  note [label="Concept is NOT shared with any\nother graph — a fresh, dedicated\nNeo4j instance. Contrast with the\nold paper_processor-embedded design\n(see before_after.png)." shape=plaintext color="#FF3333" fontcolor="#FF3333"];
+}

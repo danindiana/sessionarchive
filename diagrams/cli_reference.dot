@@ -1,0 +1,26 @@
+digraph cli_reference {
+  graph [bgcolor="black" rankdir=LR fontname="Courier New"
+         label="sessionarchive — CLI reference"
+         labelloc=t fontcolor="#00FF41" fontsize=16 pad=0.5 nodesep=0.4 ranksep=0.6];
+  node  [style=filled fillcolor="#0a0a0a" fontname="Courier New" fontsize=10 penwidth=2.0 shape=box];
+  edge  [fontname="Courier New" fontsize=9 penwidth=2.0];
+
+  root [label="sessionarchive" shape=box3d color="#00FF41" fontcolor="#00FF41"];
+
+  ingest [label="ingest" color="#00FFFF" fontcolor="#00FFFF"];
+  query  [label="query" color="#FFFF00" fontcolor="#FFFF00"];
+  label_ [label="label" color="#FF00FF" fontcolor="#FF00FF"];
+
+  root -> ingest [color="#00FFFF"];
+  root -> query [color="#FFFF00"];
+  root -> label_ [color="#FF00FF"];
+
+  ingest_flags [label="--root PATH          (default /data/corpus)\l--index-dir PATH     (default /data/index)\l--limit N            process at most N new folders\l--folders a,b,c      explicit folder list\l--model NAME         Ollama model (default qwen3:14b)\l--embed-model NAME   (default BAAI/bge-m3)\l--chunk-chars N      (default 4000)\l--reprocess          re-ingest already-done folders\l--save-every N       checkpoint interval (default 5)\l" shape=note color="#00FFFF" fontcolor="#00FFFF"];
+  ingest -> ingest_flags [color="#00FFFF" style=dashed];
+
+  query_flags [label="query TEXT   ─┐\l--like SLUG  ─┘ mutually exclusive,\l               exactly one required\l--top-k N            (default 5)\l--index-dir PATH\l--embed-model NAME\l--no-graph           skip Neo4j concept lookup\l--rerank             use trained relevance probe\l" shape=note color="#FFFF00" fontcolor="#FFFF00"];
+  query -> query_flags [color="#FFFF00" style=dashed];
+
+  label_flags [label="--index-dir PATH\l(that's it — everything else is\ninteractive: y/n/s/t/q keypresses.\nneeds a real TTY: docker run -it)\l" shape=note color="#FF00FF" fontcolor="#FF00FF"];
+  label_ -> label_flags [color="#FF00FF" style=dashed];
+}

@@ -91,6 +91,9 @@ ephemeral feedback, no persisted model).
 | [`future_directions`](diagrams/future_directions.png) | Shipped vs. proposed roadmap |
 | [`network_topology`](diagrams/network_topology.png) | All localhost/outbound, zero WAN exposure |
 | [`lib_depends`](diagrams/lib_depends.png) | Library dependency tree |
+| [`data_model`](diagrams/data_model.png) | Neo4j schema + FAISS index layout, side by side |
+| [`cli_reference`](diagrams/cli_reference.png) | All three subcommands and their exact flags |
+| [`before_after`](diagrams/before_after.png) | The actual migration: embedded-in-paper_processor vs. standalone |
 
 ## History
 
